@@ -47,11 +47,25 @@ public class AgendamentoServiceImpl implements AgendamentoService {
 
         if (request.getTipo() == TipoAgendamento.SALA) {
             if (request.getIdSala() == null) throw new BusinessException("ID da sala é obrigatório para este tipo");
+            
+            agendamentoRepository.findBySala_IdSalaAndDataAndHorarioAndStatusNot(
+                    request.getIdSala(), request.getData(), request.getHorario(), StatusAgendamento.CANCELADO)
+                    .ifPresent(a -> {
+                        throw new BusinessException("Já existe uma reserva para este espaço neste dia e horário.");
+                    });
+
             Sala sala = salaRepository.findById(request.getIdSala())
                     .orElseThrow(() -> new BusinessException("Sala não encontrada"));
             agendamento.setSala(sala);
         } else {
             if (request.getIdMesa() == null) throw new BusinessException("ID da mesa é obrigatório para este tipo");
+
+            agendamentoRepository.findByMesa_IdMesaAndDataAndHorarioAndStatusNot(
+                    request.getIdMesa(), request.getData(), request.getHorario(), StatusAgendamento.CANCELADO)
+                    .ifPresent(a -> {
+                        throw new BusinessException("Já existe uma reserva para este espaço neste dia e horário.");
+                    });
+
             Mesa mesa = mesaRepository.findById(request.getIdMesa())
                     .orElseThrow(() -> new BusinessException("Mesa não encontrada"));
             agendamento.setMesa(mesa);
